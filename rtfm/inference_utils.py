@@ -326,7 +326,7 @@ class RICESShotSelector(ShotSelector):
             raise ValueError(
                 f"got num_shots={num_shots} but DataFrame has size {len(df)}"
             )
-        cosine_similarities = torch.flatten(self.embeddings @ self.embeddings[target_index].T)
+        cosine_similarities = torch.flatten(self.embeddings @ self.embeddings[target_index])
         cosine_similarities[target_index] = -2 # set the similarity to itself to less than minimum
         topk = torch.topk(cosine_similarities, num_shots).indices.tolist()
         return df.iloc[topk]

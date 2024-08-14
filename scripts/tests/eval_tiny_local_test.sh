@@ -17,8 +17,8 @@ python -m rtfm.evaluation.evaluate_checkpoint_v2 \
   --feature_value_handling "map" \
   --feature_name_handling "map" \
   --pack_samples "False" \
-  --num_shots 1 \
-  --shot-selector "random" \
+  --num_shots 4 \
+  --shot-selector "rices" \
   --output_dir "checkpoints/tiny_trainer" \
   --outfile "tmp.csv"
 

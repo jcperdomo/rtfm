@@ -160,9 +160,13 @@ def main(
             shot_selector = RandomShotSelector()
         elif shot_selector == "rices":
             shot_selector = RICESShotSelector()
+            # Juanky: I'm not convinced this is the right way to do things for target_choices
+            # For one, the data is not yet converted to a string so the list below is a list of floats
+            # in the current testing script
+            target_choices = list(df[tabular_dataset.target].unique())
             shot_selector.post_init(inference_model, 
                                     df, tabular_dataset.target, 
-                                    df[tabular_dataset.target].unique())
+                                    target_choices)
     
         metrics = evaluator.evaluate(
             inference_model=inference_model,
