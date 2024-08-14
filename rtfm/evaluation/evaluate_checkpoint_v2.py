@@ -48,6 +48,7 @@ def main(
     serializer_config: SerializerConfig,
     outfile: str,
     split: str,
+    shot_selector: str,
     eval_task_names: Optional[str] = None,
     eval_task_file: Optional[str] = None,
     use_fast_kernels: bool = False,
@@ -126,13 +127,13 @@ def main(
         print("#" * 50)
 
     from rtfm.evaluation.evaluators import OpenVocabularyEvaluator
-    from rtfm.inference_utils import RandomShotSelector
+    from rtfm.inference_utils import RandomShotSelector, RICESShotSelector
     from rtfm.inference_utils import InferenceModel
 
     inference_model = InferenceModel(
         model=model, tokenizer=tokenizer, serializer=serializer
     )
-    shot_selector = RandomShotSelector()
+
 
     evaluator = OpenVocabularyEvaluator()
 
@@ -155,6 +156,14 @@ def main(
         # By default fetch the entire dataset.
         df = tabular_dataset._df
 
+        if shot_selector == "random":
+            shot_selector = RandomShotSelector()
+        elif shot_selector == "rices":
+            shot_selector = RICESShotSelector()
+            shot_selector.post_init(inference_model, 
+                                    df, tabular_dataset.target, 
+                                    df[tabular_dataset.target].unique())
+    
         metrics = evaluator.evaluate(
             inference_model=inference_model,
             shot_selector=shot_selector,
@@ -203,6 +212,13 @@ if __name__ == "__main__":
         choices=["train", "test", "validation"],
         default="test",
         help="metrics_prefix of data to use.",
+    )
+
+    parser.add_argument(
+        "--shot-selector",
+        choices=["random", "rices"],
+        default="random",
+        help="method to select in context examples.",
     )
 
     parser.add_argument(
