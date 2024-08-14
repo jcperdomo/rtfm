@@ -3,7 +3,7 @@ import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import List, Optional, Literal, Any, Union
-
+import torch
 import numpy as np
 import pandas as pd
 import transformers
@@ -58,7 +58,8 @@ def infer_on_example(
     max_new_tokens: Optional[int] = None,
     cfg: Optional[TLMConfig] = None,
     handle_invalid_predictions: Literal["raise", "warn", None] = "raise",
-) -> str:
+    embed: Optional[bool] = False,
+) -> Union[str, torch.Tensor]:
     """
 
     :param model: the model to perform inference with.
@@ -87,9 +88,10 @@ def infer_on_example(
     :param handle_invalid_predictions: How to handle invalid predictions from the model.
     If "raise", an exception is raised; if "warn", a warning is logged; if None
     the function returns the invalid completion as if it were a valid completion.
-    :return: a string containing the prediction.
+    :param embed: If True, return the embedding of the target example instead of the prediction.
+    :return: a string containing the prediction or tensor containing example embedding.
     """
-    is_fewshot = labeled_examples is not None
+    is_fewshot = labeled_examples is not None and embed is False
     disable_progress_bar()
 
     if len(target_example) != 1:
@@ -214,6 +216,13 @@ def infer_on_example(
         batch
     )
 
+    # if embed is true, just return the 
+    if embed:
+        with torch.no_grad():
+            outputs = model(input_ids=input_ids, attention_mask=attention_mask, output_hidden_states=True)
+        embedding = outputs.hidden_states[-1][:,-1,:]  # batch_size x seq_length * hidden_dim --> batch_size x hidden dim
+        return embedding  
+
     # Generate and decode
     stopping_criterion = make_eoc_stopping_criterion(input_ids, tokenizer)
     output = model.generate(
@@ -284,6 +293,43 @@ class ShotSelector(ABC):
         self, df: pd.DataFrame, num_shots, target_index: int
     ) -> Union[pd.DataFrame, None]:
         raise
+
+class RICESShotSelector(ShotSelector):
+
+    def post_init(
+        self, 
+        model: transformers.AutoModelForCausalLM, 
+        df: pd.DataFrame,
+        target_colname: str, 
+        target_choices: List[str]
+    ) -> None:
+
+        embeddings = []
+        for i in range(df.shape[0]):
+            embedding = model.predict(
+                target_example=df.iloc[[i]],
+                target_colname=target_colname,
+                target_choices=target_choices,
+                labeled_examples=None,
+                embed=True
+            )
+            embeddings.append(embedding)
+        embeddings = torch.concat(embeddings, axis=0)
+        self.embeddings = torch.nn.functional.normalize(embeddings)
+        
+    def select_shots(
+        self, df: pd.DataFrame, num_shots: int, target_index: int
+    ) -> Union[pd.DataFrame, None]:
+        if not num_shots:
+            return None
+        if num_shots > len(df):
+            raise ValueError(
+                f"got num_shots={num_shots} but DataFrame has size {len(df)}"
+            )
+        cosine_similarities = torch.flatten(self.embeddings @ self.embeddings[target_index].T)
+        cosine_similarities[target_index] = -2 # set the similarity to itself to less than minimum
+        topk = torch.topk(cosine_similarities, num_shots).indices.tolist()
+        return df.iloc[topk]
 
 
 class RandomShotSelector(ShotSelector):
