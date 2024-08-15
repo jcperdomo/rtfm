@@ -41,10 +41,10 @@ class OpenVocabularyEvaluator:
                         target_example=target_example,
                         target_colname=target_colname,
                         target_choices=target_choices,
+                        max_new_tokens=4, # juanky edit
                         labeled_examples=shots,
                         handle_invalid_predictions=handle_invalid_predictions,
                     )
-
                 except InvalidInferenceError:
                     decoded_preds = [
                         None,

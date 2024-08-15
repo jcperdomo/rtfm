@@ -1,0 +1,5 @@
+{"name": "x0", "description": null, "is_target": false, "na_values": [], "value_mapping": null, "name_extended": null, "note": null, "kind": "float"}
+{"name": "x1", "description": null, "is_target": false, "na_values": [], "value_mapping": null, "name_extended": null, "note": null, "kind": "float"}
+{"name": "x2", "description": null, "is_target": false, "na_values": [], "value_mapping": null, "name_extended": null, "note": null, "kind": "float"}
+{"name": "x3", "description": null, "is_target": false, "na_values": [], "value_mapping": null, "name_extended": null, "note": null, "kind": "float"}
+{"name": "y", "description": null, "is_target": true, "na_values": [], "value_mapping": null, "name_extended": null, "note": null, "kind": "int"}

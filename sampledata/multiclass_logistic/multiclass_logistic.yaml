@@ -1,0 +1,9 @@
+label_values:
+- 2
+- 0
+- 3
+- 1
+labels_mapping: null
+prefix: Predict the value of y
+suffix: What is the value of y?
+task_context: null

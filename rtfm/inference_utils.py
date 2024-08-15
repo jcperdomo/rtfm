@@ -7,6 +7,7 @@ import torch
 import numpy as np
 import pandas as pd
 import transformers
+from tqdm import tqdm
 from datasets.utils.logging import (
     disable_progress_bar,
     enable_progress_bar,
@@ -305,7 +306,7 @@ class RICESShotSelector(ShotSelector):
     ) -> None:
 
         embeddings = []
-        for i in range(df.shape[0]):
+        for i in tqdm(range(len(df)), desc="precomputing_embeddings", total=len(df)):
             embedding = model.predict(
                 target_example=df.iloc[[i]],
                 target_colname=target_colname,

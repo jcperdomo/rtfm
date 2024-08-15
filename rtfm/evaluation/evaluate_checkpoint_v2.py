@@ -154,8 +154,8 @@ def main(
             eval_task_name, preprocessor_config=preprocessor_config
         )
         # By default fetch the entire dataset.
-        df = tabular_dataset._df
-
+        df = tabular_dataset._df.astype(str) # Juanky HACK
+        
         if shot_selector == "random":
             shot_selector = RandomShotSelector()
         elif shot_selector == "rices":
