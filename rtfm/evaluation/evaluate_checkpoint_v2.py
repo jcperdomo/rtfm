@@ -14,15 +14,23 @@ from rtfm.arguments import (
     DataArguments,
 )
 from rtfm.configs import TrainConfig, TokenizerConfig, SerializerConfig
-from rtfm.evaluation.evaluation_utils import (
-    prepare_eval_kwargs,
-    prepare_eval_datasets,
-)
+# from rtfm.evaluation.evaluation_utils import (
+#     prepare_eval_kwargs,
+#     prepare_eval_datasets,
+# )
 from rtfm.serialization.serializers import get_serializer
-from rtfm.task_config import get_tlm_config
 from rtfm.tokenization.text import sanity_check_tokenizer, prepare_tokenizer
 from rtfm.train_utils import load_model_from_checkpoint
 from rtfm.utils import get_task_names_list, initialize_dir, get_latest_checkpoint
+
+#juanky
+from rtfm.datasets import get_task_dataset
+from rtfm.datasets.data_utils import make_object_json_serializable
+
+
+from rtfm.datasets.tableshift_utils import (
+    fetch_preprocessor_config_from_data_args
+)
 
 LOG_LEVEL = logging.DEBUG
 
@@ -141,21 +149,20 @@ def main(
     for eval_task_name in eval_task_names:
         prefix = f"{split}/{eval_task_name}"
 
-        from rtfm.datasets.tableshift_utils import (
-            fetch_preprocessor_config_from_data_args,
-            get_dataset_info,
-        )
-        from rtfm.datasets import get_task_dataset
-
-        preprocessor_config = fetch_preprocessor_config_from_data_args(
-            data_args, eval_task_name
-        )
+        preprocessor_config = fetch_preprocessor_config_from_data_args(data_arguments, eval_task_name)
         tabular_dataset = get_task_dataset(
             eval_task_name, preprocessor_config=preprocessor_config
         )
-        # By default fetch the entire dataset.
-        df = tabular_dataset._df.astype(str) # Juanky HACK
         
+        # By default fetch the entire dataset.
+        df = tabular_dataset._df
+        df[tabular_dataset.target] = make_object_json_serializable(df[tabular_dataset.target])
+        
+        # Print out the columns and corresponding datatypes of the dataframe
+        print("Columns and datatypes of the dataframe:\n")
+        for column, dtype in df.dtypes.items():
+            print(f"{column}: {dtype}")
+
         if shot_selector == "random":
             shot_selector = RandomShotSelector()
         elif shot_selector == "rices":

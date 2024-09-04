@@ -217,7 +217,7 @@ def infer_on_example(
         batch
     )
 
-    # if embed is true, just return the 
+    # if embed is true, just return the embeddings for the last layer
     if embed:
         with torch.no_grad():
             outputs = model(input_ids=input_ids, attention_mask=attention_mask, output_hidden_states=True)
@@ -305,16 +305,23 @@ class RICESShotSelector(ShotSelector):
         target_choices: List[str]
     ) -> None:
 
+        # Store the original DataFrame
+        self.init_df = df.copy()
+
+        # Set model to evaluation mode
+        model.eval()
+
         embeddings = []
-        for i in tqdm(range(len(df)), desc="precomputing_embeddings", total=len(df)):
-            embedding = model.predict(
-                target_example=df.iloc[[i]],
-                target_colname=target_colname,
-                target_choices=target_choices,
-                labeled_examples=None,
-                embed=True
-            )
-            embeddings.append(embedding)
+        with torch.no_grad():
+            for i in tqdm(range(len(df)), desc="precomputing_embeddings", total=len(df)):
+                embedding = model.predict(
+                    target_example=df.iloc[[i]],
+                    target_colname=target_colname,
+                    target_choices=target_choices,
+                    labeled_examples=None,
+                    embed=True
+                )
+                embeddings.append(embedding)
         embeddings = torch.concat(embeddings, axis=0)
         self.embeddings = torch.nn.functional.normalize(embeddings)
         
@@ -327,7 +334,10 @@ class RICESShotSelector(ShotSelector):
             raise ValueError(
                 f"got num_shots={num_shots} but DataFrame has size {len(df)}"
             )
-        cosine_similarities = torch.flatten(self.embeddings @ self.embeddings[target_index])
+        if not df.equals(self.init_df):
+            raise ValueError("The input DataFrame does not match the one used for initialization")
+
+        cosine_similarities = torch.flatten(self.embeddings @ self.embeddings[target_index].T)
         cosine_similarities[target_index] = -2 # set the similarity to itself to less than minimum
         topk = torch.topk(cosine_similarities, num_shots).indices.tolist()
         return df.iloc[topk]

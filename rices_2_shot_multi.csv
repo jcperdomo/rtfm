@@ -1,7 +1,0 @@
-metric,value,model_arguments.model_name_or_path,split
-test/multiclass_logistic_accuracy_open_vocab,0.544,mlfoundations/tabula-8b,test
-test/multiclass_logistic_samples_seen_per_gpu_open_vocab,500.0,mlfoundations/tabula-8b,test
-test/multiclass_logistic_samples_seen_total_open_vocab,500.0,mlfoundations/tabula-8b,test
-test/multiclass_logistic_invalid_prediction_rate_open_vocab,0.0,mlfoundations/tabula-8b,test
-test/multiclass_logistic_runtime_secs_open_vocab,516.0249497890472,mlfoundations/tabula-8b,test
-test/multiclass_logistic_secs_per_sample_open_vocab,1.0320498995780945,mlfoundations/tabula-8b,test
