@@ -226,7 +226,7 @@ def infer_on_example(
 
     # Generate and decode
     stopping_criterion = make_eoc_stopping_criterion(input_ids, tokenizer)
-    output = model.generate(
+    output = model.generate(  # output['input_ids'] check that length is right, the last token is EOS token. Check it doesn't generate anything else
         input_ids,
         attention_mask=attention_mask,
         max_new_tokens=max_new_tokens,
