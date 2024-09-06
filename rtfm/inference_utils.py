@@ -233,6 +233,7 @@ def infer_on_example(
         stopping_criteria=[stopping_criterion],
     )
     decoded_text = tokenizer.batch_decode(output)[0].strip()
+    print(output['input_ids'], decoded_text) # rerun with different number of max_new_tokens
     prediction_text, is_valid = parse_generated_text(decoded_text)
 
     # Exception handling
