@@ -41,7 +41,7 @@ class OpenVocabularyEvaluator:
                         target_example=target_example,
                         target_colname=target_colname,
                         target_choices=target_choices,
-                        max_new_tokens=4, # juanky edit
+                        max_new_tokens=20, # juanky edit
                         labeled_examples=shots,
                         handle_invalid_predictions=handle_invalid_predictions,
                     )
@@ -50,13 +50,21 @@ class OpenVocabularyEvaluator:
                         None,
                     ]
                     invalid_predictions += 1
-
-                all_preds.extend(decoded_preds)
-                all_labels.extend(target_example[target_colname].tolist())
-
+                label = target_example[target_colname].item()
+                # print('prediction', decoded_preds, type(decoded_preds))
+                # print('label', label, type(label))
+                # print('correct', int(label == decoded_preds))
+                all_preds.append(decoded_preds)
+                all_labels.append(target_example[target_colname].item())
+                # print('all preds', all_preds)
+                # print('all labels', all_labels)
+            
             local_samples_seen += 1
-
+            # print('eval max samples ', train_config.eval_max_samples)
             if len(all_preds) >= train_config.eval_max_samples:
+                # print()
+                # print('GOT TO MAX EVAL SAMPLES, local samples seen ', local_samples_seen)
+                # print("len all preds ", len(all_preds), all_preds)
                 break
 
         runtime = timestamp() - start_time

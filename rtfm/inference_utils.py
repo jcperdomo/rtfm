@@ -56,7 +56,7 @@ def infer_on_example(
     target_colname: str,
     target_choices: List[Any],
     labeled_examples: Optional[pd.DataFrame] = None,
-    max_new_tokens: Optional[int] = None,
+    max_new_tokens: Optional[int] = None, 
     cfg: Optional[TLMConfig] = None,
     handle_invalid_predictions: Literal["raise", "warn", None] = "raise",
     embed: Optional[bool] = False,
@@ -225,6 +225,7 @@ def infer_on_example(
         return embedding  
 
     # Generate and decode
+    print("MAX NEW TOKENS", max_new_tokens)
     stopping_criterion = make_eoc_stopping_criterion(input_ids, tokenizer)
     output = model.generate(  # output['input_ids'] check that length is right, the last token is EOS token. Check it doesn't generate anything else
         input_ids,
@@ -233,7 +234,7 @@ def infer_on_example(
         stopping_criteria=[stopping_criterion],
     )
     decoded_text = tokenizer.batch_decode(output)[0].strip()
-    print(output['input_ids'], decoded_text) # rerun with different number of max_new_tokens
+    # print(output['input_ids'], decoded_text) # rerun with different number of max_new_tokens
     prediction_text, is_valid = parse_generated_text(decoded_text)
 
     # Exception handling
@@ -310,7 +311,8 @@ class RICESShotSelector(ShotSelector):
         self.init_df = df.copy()
 
         # Set model to evaluation mode
-        model.eval()
+        # print(model)
+        # model.model.eval() #TODO FIX
 
         embeddings = []
         with torch.no_grad():

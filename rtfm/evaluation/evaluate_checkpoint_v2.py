@@ -156,8 +156,8 @@ def main(
         
         # By default fetch the entire dataset.
         df = tabular_dataset._df
+        df = df.sample(frac=1, random_state=42).reset_index(drop=True) # Juanky Edit: fixes ordered datasets
         df[tabular_dataset.target] = make_object_json_serializable(df[tabular_dataset.target])
-        
         # Print out the columns and corresponding datatypes of the dataframe
         print("Columns and datatypes of the dataframe:\n")
         for column, dtype in df.dtypes.items():
@@ -167,6 +167,7 @@ def main(
             shot_selector = RandomShotSelector()
         elif shot_selector == "rices":
             shot_selector = RICESShotSelector()
+            df = df.iloc[:200] # Juanky Hack
             # Juanky: I'm not convinced this is the right way to do things for target_choices
             # For one, the data is not yet converted to a string so the list below is a list of floats
             # in the current testing script
